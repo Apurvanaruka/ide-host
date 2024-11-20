@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot UI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <div class="container mx-auto max-w-3xl flex-grow flex flex-col">
+    <div class="bg-white shadow-md rounded-lg p-4 flex-grow overflow-auto" id="chatWindow">
+      <div class="text-gray-500 text-sm text-center mb-2">Chatbot</div>
+    </div>
+    <div class="mt-4 flex items-center">
+      <input 
+        type="text" 
+        id="userInput" 
+        placeholder="Type your message..." 
+        class="w-full p-3 rounded-l-lg border border-gray-300 focus:ring focus:ring-blue-300 outline-none"
+      >
+      <button 
+        id="sendButton" 
+        class="bg-blue-500 text-white px-4 py-3 rounded-r-lg hover:bg-blue-600 focus:ring focus:ring-blue-300"
+      >
+        Send
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const chatWindow = document.getElementById('chatWindow');
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+
+    // Function to append messages to the chat window
+    function appendMessage(sender, message) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `mb-2 ${sender === 'user' ? 'text-right' : 'text-left'}`;
+      messageDiv.innerHTML = `
+        <span class="inline-block px-4 py-2 rounded-lg ${
+          sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
+        }">
+          ${message}
+        </span>
+      `;
+      chatWindow.appendChild(messageDiv);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Function to send the POST request
+    async function sendPrompt(prompt) {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/prompt', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prompt })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch response');
+        }
+
+        const data = await response.json();
+        return data.response;
+      } catch (error) {
+        console.error('Error:', error);
+        return 'Error: Unable to get a response from the server.';
+      }
+    }
+
+    // Event listener for the send button
+    sendButton.addEventListener('click', async () => {
+      const prompt = userInput.value.trim();
+      if (!prompt) return;
+
+      appendMessage('user', prompt);
+      userInput.value = '';
+      
+      const response = await sendPrompt(prompt);
+      appendMessage('bot', response);
+    });
+
+    // Optional: Allow pressing Enter to send the message
+    userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendButton.click();
+      }
+    });
+  </script>
+</body>
+</html>
