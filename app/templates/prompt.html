@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 h-screen flex flex-col">
+  <!-- Navbar -->
+  <nav class="bg-gray-800 text-white shadow-md">
+    <div class="container mx-auto flex items-center justify-between p-4">
+      <a href="/">
+        <img src="https://internshala-uploads.internshala.com/logo/7mlf3g1yuhn-18596.png.webp" alt="Logo" class="h-10">
+      </a>
+      <div class="flex items-center space-x-4">
+        {% if user.get('picture') %}
+        <a href="/logout" class="hover:text-gray-300">Log Out</a>
+        <img src="{{ user.get('picture') }}" alt="Profile Picture" class="w-10 h-10 rounded-full">
+        {% else %}
+        <p class="text-gray-400">No profile picture available</p>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="flex flex-1 lg:flex-row h-full overflow-hidden bg-white">
+    <!-- Sidebar -->
+    <aside id="promptSidebar" class="p-3 w-full lg:w-1/3 bg-gray-200 overflow-y-auto h-full">
+      <!-- Prompts will be dynamically loaded -->
+    </aside>
+
+    <!-- Chatbox -->
+    <section class="flex flex-col w-full h-full bg-gray-50">
+      <div id="messageContainer" class="flex-1 p-4 overflow-y-auto space-y-4 bg-white shadow-md mx-4 my-2 rounded">
+        <!-- Messages will appear here -->
+      </div>
+      <div class="p-4 bg-gray-100 flex items-center">
+        <input id="messageInput" type="text"
+          class="flex-1 px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+          placeholder="Type your message here...">
+        <button onclick="handleSendMessage()" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400">
+          Send
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const promptSidebar = document.getElementById('promptSidebar');
+    const messageContainer = document.getElementById('messageContainer');
+    const messageInput = document.getElementById('messageInput');
+
+    // Load prompts into the sidebar
+    async function loadPrompts() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/prompt');
+        if (!response.ok) throw new Error('Failed to load prompts');
+
+        const { prompts } = await response.json();
+        promptSidebar.innerHTML = "";
+        prompts.reverse().forEach(addPromptToSidebar); // Reverse order display
+      } catch (error) {
+        console.error('Error loading prompts:', error);
+      }
+    }
+
+    // Add a prompt to the sidebar
+    function addPromptToSidebar(prompt) {
+      const promptWrapper = document.createElement('div');
+      promptWrapper.className = 'flex justify-between items-center w-full p-2 truncate group';
+
+      const promptText = document.createElement('div');
+      promptText.className = 'bg-gray-300 px-4 py-2 rounded w-full cursor-pointer truncate';
+      promptText.textContent = prompt;
+      promptText.title = prompt; // Tooltip for full text
+      promptText.onclick = () => fetchPromptResponse(prompt);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Del';
+      deleteBtn.className = 'bg-red-700 text-white px-2 py-1 rounded hover:bg-red-500 ml-2';
+      deleteBtn.onclick = () => handleDeletePrompt(prompt);
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = 'Edit';
+      editBtn.className = 'bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-400 ml-2';
+      editBtn.onclick = () => handleEditPrompt(prompt);
+
+      promptWrapper.append(promptText, deleteBtn, editBtn);
+      promptSidebar.prepend(promptWrapper); // Add to the top of the sidebar
+    }
+
+    // Fetch and display a prompt's response
+    async function fetchPromptResponse(prompt) {
+      messageContainer.innerHTML = ""; // Clear chatbox
+      try {
+        const response = await fetch('http://127.0.0.1:5000/prompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        if (!response.ok) throw new Error('Failed to fetch prompt response');
+
+        const { prompt: promptText, response: responseText } = await response.json();
+        displayMessage(promptText, 'user');
+        displayMessage(responseText, 'bot');
+      } catch (error) {
+        console.error('Error fetching response:', error);
+        displayMessage('Error: Unable to fetch response.', 'bot');
+      }
+    }
+
+    // Send a new message
+    async function handleSendMessage() {
+      const prompt = messageInput.value.trim();
+      if (!prompt) return;
+
+      displayMessage(prompt, 'user');
+      messageInput.value = '';
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/new-prompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        if (!response.ok) throw new Error('Failed to send message');
+
+        const { response: responseText } = await response.json();
+        addPromptToSidebar(prompt);
+        displayMessage(responseText, 'bot');
+      } catch (error) {
+        console.error('Error sending message:', error);
+        displayMessage('Error: Unable to send message.', 'bot');
+      }
+    }
+
+    // Delete a prompt
+    async function handleDeletePrompt(prompt) {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/prompt', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        if (!response.ok) throw new Error('Failed to delete prompt');
+
+        loadPrompts(); // Reload prompts after deletion
+      } catch (error) {
+        console.error('Error deleting prompt:', error);
+      }
+    }
+
+    // Edit a prompt
+    function handleEditPrompt(prompt) {
+      messageInput.value = prompt; // Load the prompt into the input box for editing
+    }
+
+    // Display a message in the chatbox
+    function displayMessage(message, sender) {
+      const messageWrapper = document.createElement('div');
+      messageWrapper.className = `flex w-full ${sender === 'user' ? 'justify-end' : ''}`;
+
+      const messageBubble = document.createElement('div');
+      messageBubble.className = `px-4 py-2 rounded max-w-xs ${sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'}`;
+      messageBubble.textContent = message;
+
+      messageWrapper.appendChild(messageBubble);
+      messageContainer.appendChild(messageWrapper);
+      messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+
+    // Load prompts on page load
+    loadPrompts();
+  </script>
+</body>
+
+</html>

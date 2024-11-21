@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDE Host Private Limited</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="script.js"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-900">
+
+    <!-- Navbar -->
+    <nav class="bg-gray-200 text-white shadow-md">
+        <div class="container mx-auto flex items-center justify-between p-4">
+            <!-- Logo -->
+            <div class="flex items-center space-x-2">
+                <a href="">
+                    <img src="https://internshala-uploads.internshala.com/logo/7mlf3g1yuhn-18596.png.webp" alt="Logo"
+                        class="h-10 w-35">
+                </a>
+                <!-- <span class="font-bold text-lg">IDE Host</span> -->
+            </div>
+            <!-- Company name and Profile -->
+            <div class="flex items-center space-x-4">
+                <span class="hidden sm:block text-sm">Private Limited</span>
+                <img src="https://via.placeholder.com/40" alt="Profile"
+                    class="h-10 w-10 rounded-full border-2 border-gray-600">
+            </div>
+        </div>
+    </nav>
+
+
+
+    <!-- Content Area -->
+    <div id="content-container" class="container mx-auto mt-10">
+        <!-- <iframe 
+    src="login.html" 
+    class="w-full h-96" 
+    frameborder="0">
+  </iframe> -->
+        <button onclick="loadPage('login.html')">login</button>
+        <p class="text-center text-gray-600">Welcome to IDE Host Private Limited!</p>
+    </div>
+
+
+    <!-- Chatbot Button -->
+    <button
+        class="fixed bottom-4 right-4 bg-gray-800 text-white p-4 rounded-full shadow-lg hover:bg-gray-700 transition">
+        <span class="font-semibold">💬 Chatbot</span>
+    </button>
+    <script> loadPage();
+
+        // loadPage('dashboard.html')
+        function loadPage(page = 'http://127.0.0.1:5000/dashboard.html') {
+            // Load another HTML page dynamically   
+            fetch(page)
+
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('content-container').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading the page:', error);
+                    document.getElementById('content-container').innerHTML = '<p class="text-red-500">Failed to load the content.</p>';
+                });
+
+        }
+
+    </script>
+</body>
+
+</html>

@@ -4,12 +4,11 @@ from flask_session import Session
 from flask_dance.contrib.google import make_google_blueprint
 from dotenv import load_dotenv
 import os
+from flask_migrate import Migrate
 
-# Load environment variables
-load_dotenv()
-
-# Initialize extensions
+# Existing imports
 db = SQLAlchemy()
+migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
@@ -31,20 +30,22 @@ def create_app():
             "https://www.googleapis.com/auth/userinfo.profile",
         ],
     )
-    # Allow HTTP in development for OAuth
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
     # Initialize extensions
     Session(app)
     db.init_app(app)
+    migrate.init_app(app, db)
 
     app.register_blueprint(google_bp, url_prefix="/auth")
     
     # Register blueprints
     from app.auth import auth_bp
     from app.routes import main_bp
+    from app.view import view_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(view_bp)
 
     return app

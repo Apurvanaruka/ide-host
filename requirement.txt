@@ -1,0 +1,2 @@
+flask-migrate 
+psycopg2-binary

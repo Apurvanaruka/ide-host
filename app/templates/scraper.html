@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 h-screen flex flex-col">
+  <!-- Navbar -->
+  <nav class="bg-gray-800 text-white shadow-md">
+    <div class="container mx-auto flex items-center justify-between p-4">
+      <a href="/">
+        <img src="https://internshala-uploads.internshala.com/logo/7mlf3g1yuhn-18596.png.webp" alt="Logo" class="h-10">
+      </a>
+      <div class="flex items-center space-x-4">
+        {% if user.get('picture') %}
+        <a href="/logout" class="hover:text-gray-300">Log Out</a>
+        <img src="{{ user.get('picture') }}" alt="Profile Picture" class="w-10 h-10 rounded-full">
+        {% else %}
+        <p class="text-gray-400">No profile picture available</p>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="promptSidebar" class="w-full lg:w-1/3 bg-gray-200 overflow-y-auto p-3">
+      <!-- Prompts will be dynamically loaded here -->
+      <div class="space-y-2">
+        <!-- Example Child -->
+        <div class="bg-gray-300 px-4 py-2 rounded w-full truncate cursor-pointer hover:bg-gray-400">
+          Sample Prompt with very long text that should be truncated.
+        </div>
+      </div>
+    </aside>
+
+    <!-- Chatbox -->
+    <section class="flex flex-col w-full h-full bg-gray-50">
+      <div id="messageContainer" class="flex-1 p-4 overflow-y-auto bg-white shadow-md mx-4 my-2 rounded">
+        <!-- Messages will appear here -->
+      </div>
+      <div class="p-4 bg-gray-100 flex items-center fixed bottom-0 left-0 w-full lg:w-2/3 border-t border-gray-300">
+        <input id="messageInput" type="text"
+          class="flex-1 px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+          placeholder="Type your message here...">
+        <button onclick="handleSendMessage()" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400">
+          Send
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const promptSidebar = document.getElementById('promptSidebar');
+    const messageContainer = document.getElementById('messageContainer');
+    const messageInput = document.getElementById('messageInput');
+
+    // Example: Add prompts dynamically for testing scroll and truncation
+    for (let i = 1; i <= 20; i++) {
+      const newPrompt = document.createElement('div');
+      newPrompt.className = 'bg-gray-300 px-4 py-2 rounded w-full truncate cursor-pointer hover:bg-gray-400';
+      newPrompt.textContent = `Prompt ${i} - This is a very long text for testing purposes to check truncation.`;
+      promptSidebar.appendChild(newPrompt);
+    }
+
+    // Handle sending a message
+    function handleSendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      // Display user message
+      appendMessage(message, 'user');
+      messageInput.value = '';
+
+      // Simulate bot response
+      setTimeout(() => {
+        appendMessage(`Echo: ${message}`, 'bot');
+      }, 1000);
+    }
+
+    // Append messages to the chatbox
+    function appendMessage(message, sender) {
+      const messageWrapper = document.createElement('div');
+      messageWrapper.className = `flex w-full ${sender === 'user' ? 'justify-end' : ''}`;
+
+      const messageBubble = document.createElement('div');
+      messageBubble.className = `px-4 py-2 rounded max-w-xs ${
+        sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'
+      }`;
+      messageBubble.textContent = message;
+
+      messageWrapper.appendChild(messageBubble);
+      messageContainer.appendChild(messageWrapper);
+      messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+  </script>
+</body>
+
+</html>
