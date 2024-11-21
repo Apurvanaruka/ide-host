@@ -24,10 +24,7 @@ def google_login():
 
         # Check or create user in database
         user = User.query.filter_by(email=email).first()
-        if id:
-            existing_user = User.query.get(id)
-        if existing_user:
-            raise ValueError(f"User with id {id} already exists.")
+    
         if user:
             user.id=id
             user.name = name

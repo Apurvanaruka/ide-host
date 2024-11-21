@@ -1,6 +1,23 @@
-from flask import session, jsonify
+import google.generativeai as genai
+from flask import session, jsonify, render_template, session
 from functools import wraps
 from time import time
+import os
+from dotenv import load_dotenv, find_dotenv
+
+
+load_dotenv(find_dotenv())
+genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+
+
+async def generete_response(prompt_text):
+    await time.sleep(200)
+    return "this is updated response", 300 # early return
+
+    # model = genai.GenerativeModel("gemini-1.5-flash")
+    # response = model.generate_content(prompt_text)
+    # print(response.text)
+    # return response.text, response.usage_metadata.total_token_count
 
 def login_required(f):
     @wraps(f)
@@ -13,7 +30,9 @@ def login_required(f):
         # Validate token expiration
         expires_at = google_oauth_token.get("expires_at")
         if not expires_at or expires_at < time():
-            return jsonify({"error": "Token has expired. Please log in again."}), 401
+            session.clear()
+            return render_template("login.html")
+
 
         # Check for google_user key in session
         google_user = session.get("google_user")
