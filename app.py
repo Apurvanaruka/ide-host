@@ -82,7 +82,7 @@ def init_db():
 @app.route('/')
 def index():
   if session:
-    return render_template('dashboard.html', user=session['google_user'])
+    return render_template('index.html', user=session['google_user'])
   else:
     return render_template('login.html')
 
@@ -181,7 +181,7 @@ def google_login():
         db.session.add(user)
         # Commit changes
         db.session.commit()
-        return render_template('dashboard.html', user=session['google_user'])
+        return render_template('index.html', user=session['google_user'])
 
     return render_template('login.html')
     

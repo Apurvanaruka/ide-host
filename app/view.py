@@ -8,10 +8,10 @@ view_bp = Blueprint("view", __name__)
 @view_bp.route("/")
 def index():
     """
-    Render login page if user is not logged in, otherwise show dashboard.
+    Render login page if user is not logged in, otherwise show index.
     """
     if "google_user" in session:
-        return render_template("dashboard.html", user=session["google_user"])
+        return render_template("index.html", user=session["google_user"])
     return render_template("login.html")
 
 

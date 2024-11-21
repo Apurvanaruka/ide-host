@@ -4,11 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prompts</title>
+  <title>Web Scraper</title>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 h-screen flex flex-col">
+<body class="bg-gray-100 min-h-screen">
   <!-- Navbar -->
   <nav class="bg-gray-800 text-white shadow-md">
     <div class="container mx-auto flex items-center justify-between p-4">
@@ -17,7 +18,7 @@
       </a>
       <div class="flex items-center space-x-4">
         {% if user.get('picture') %}
-        <a href="/logout" class="hover:text-gray-300">Log Out</a>
+        <a href="/logout" class="text-white hover:text-gray-300">Log Out</a>
         <img src="{{ user.get('picture') }}" alt="Profile Picture" class="w-10 h-10 rounded-full">
         {% else %}
         <p class="text-gray-400">No profile picture available</p>
@@ -26,79 +27,145 @@
     </div>
   </nav>
 
-  <!-- Main Container -->
-  <div class="flex flex-1 overflow-hidden">
+  <!-- Main Section -->
+  <div class="flex flex-col lg:flex-row">
     <!-- Sidebar -->
-    <aside id="promptSidebar" class="w-full lg:w-1/3 bg-gray-200 overflow-y-auto p-3">
-      <!-- Prompts will be dynamically loaded here -->
-      <div class="space-y-2">
-        <!-- Example Child -->
-        <div class="bg-gray-300 px-4 py-2 rounded w-full truncate cursor-pointer hover:bg-gray-400">
-          Sample Prompt with very long text that should be truncated.
-        </div>
-      </div>
+    <aside id="urlSidebar" class="bg-gray-200 p-4 w-full lg:w-1/3 h-screen overflow-y-auto">
+      <!-- URLs will be dynamically loaded -->
     </aside>
 
-    <!-- Chatbox -->
-    <section class="flex flex-col w-full h-full bg-gray-50">
-      <div id="messageContainer" class="flex-1 p-4 overflow-y-auto bg-white shadow-md mx-4 my-2 rounded">
-        <!-- Messages will appear here -->
+    <!-- Content Section -->
+    <main class="flex-1 p-4">
+      <!-- Input Section -->
+      <div class="bg-white shadow-md rounded-lg p-4">
+        <div class="flex items-center">
+          <input id="urlInput" type="text" class="flex-1 px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter website URL...">
+          <button onclick="handleScrape()" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400">
+            Scrape
+          </button>
+        </div>
       </div>
-      <div class="p-4 bg-gray-100 flex items-center fixed bottom-0 left-0 w-full lg:w-2/3 border-t border-gray-300">
-        <input id="messageInput" type="text"
-          class="flex-1 px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
-          placeholder="Type your message here...">
-        <button onclick="handleSendMessage()" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400">
-          Send
-        </button>
+
+      <!-- Result Section -->
+      <div id="responseContainer" class="bg-white shadow-md rounded-lg p-4 mt-4 hidden">
+        <h2 class="text-xl font-bold mb-2">Scraped Information</h2>
+        <p id="responseTitle" class="text-gray-700"><strong>Title:</strong> </p>
+        <p id="responseDescription" class="text-gray-700"><strong>Description:</strong> </p>
+        <p id="responseName" class="text-gray-700"><strong>Name:</strong> </p>
+        <p id="responseEmail" class="text-gray-700"><strong>Email:</strong> </p>
+        <p id="responseContact" class="text-gray-700"><strong>Contact:</strong> </p>
+        <p id="responseAbout" class="text-gray-700"><strong>About:</strong> </p>
       </div>
-    </section>
+    </main>
   </div>
 
   <script>
-    const promptSidebar = document.getElementById('promptSidebar');
-    const messageContainer = document.getElementById('messageContainer');
-    const messageInput = document.getElementById('messageInput');
+    const urlSidebar = document.getElementById('urlSidebar');
+    const urlInput = document.getElementById('urlInput');
+    const responseContainer = document.getElementById('responseContainer');
+    const responseTitle = document.getElementById('responseTitle');
+    const responseDescription = document.getElementById('responseDescription');
+    const responseName = document.getElementById('responseName');
+    const responseEmail = document.getElementById('responseEmail');
+    const responseContact = document.getElementById('responseContact');
+    const responseAbout = document.getElementById('responseAbout');
 
-    // Example: Add prompts dynamically for testing scroll and truncation
-    for (let i = 1; i <= 20; i++) {
-      const newPrompt = document.createElement('div');
-      newPrompt.className = 'bg-gray-300 px-4 py-2 rounded w-full truncate cursor-pointer hover:bg-gray-400';
-      newPrompt.textContent = `Prompt ${i} - This is a very long text for testing purposes to check truncation.`;
-      promptSidebar.appendChild(newPrompt);
+    // Load history of URLs into the sidebar
+    async function loadUrlHistory() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/handle_scrape');
+        if (!response.ok) throw new Error('Failed to fetch history');
+
+        const { urls } = await response.json();
+        urlSidebar.innerHTML = "";
+        urls.forEach(url => addUrlToSidebar(url));
+      } catch (error) {
+        console.error('Error loading URL history:', error);
+      }
     }
 
-    // Handle sending a message
-    function handleSendMessage() {
-      const message = messageInput.value.trim();
-      if (!message) return;
-
-      // Display user message
-      appendMessage(message, 'user');
-      messageInput.value = '';
-
-      // Simulate bot response
-      setTimeout(() => {
-        appendMessage(`Echo: ${message}`, 'bot');
-      }, 1000);
+    // Add a single URL to the sidebar
+    function addUrlToSidebar(url) {
+      const urlItem = document.createElement('div');
+      urlItem.className = 'flex items-center justify-between p-2 bg-gray-300 rounded mb-2';
+      urlItem.innerHTML = `
+        <span class="bg-gray-300 px-4 py-2 rounded w-full cursor-pointer truncate" onclick="fetchAndDisplayResponse('${url}')">${url}</span>
+        <button class="text-white bg-red-600 px-2 py-1 rounded" onclick="deleteUrl('${url}')">Delete</button>`;
+      urlSidebar.prepend(urlItem);
     }
 
-    // Append messages to the chatbox
-    function appendMessage(message, sender) {
-      const messageWrapper = document.createElement('div');
-      messageWrapper.className = `flex w-full ${sender === 'user' ? 'justify-end' : ''}`;
+    // Scrape a new URL entered by the user
+    async function handleScrape() {
+      const url = urlInput.value.trim();
+      if (!url) return;
+      try {
+        const response = await fetch('http://127.0.0.1:5000/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        if (!response.ok) throw new Error('Failed to scrape URL');
 
-      const messageBubble = document.createElement('div');
-      messageBubble.className = `px-4 py-2 rounded max-w-xs ${
-        sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'
-      }`;
-      messageBubble.textContent = message;
-
-      messageWrapper.appendChild(messageBubble);
-      messageContainer.appendChild(messageWrapper);
-      messageContainer.scrollTop = messageContainer.scrollHeight;
+        const data = await response.json();
+        addUrlToSidebar(url); // Add the new URL to the sidebar
+        displayResponse(data); // Display the response
+      } catch (error) {
+        console.error('Error scraping URL:', error);
+        alert('Unable to scrape the URL.');
+      }
     }
+
+    // Fetch the response for a specific URL and display it
+    async function fetchAndDisplayResponse(url) {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/handle_scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        if (!response.ok) throw new Error('Failed to fetch response for URL');
+
+        const data = await response.json();
+        displayResponse(data);
+      } catch (error) {
+        console.error('Error fetching response:', error);
+      }
+    }
+
+    // Display the scraped response in the result section
+    function displayResponse(data) {
+      responseContainer.classList.remove('hidden');
+      responseTitle.innerHTML = `<strong>Title:</strong> ${data.title || 'N/A'}`;
+      responseDescription.innerHTML = `<strong>Description:</strong> ${data.description || 'N/A'}`;
+      responseName.innerHTML = `<strong>Name:</strong> ${data.name || 'N/A'}`;
+      responseEmail.innerHTML = `<strong>Email:</strong> ${data.email || 'N/A'}`;
+      responseContact.innerHTML = `<strong>Contact:</strong> ${data.contact || 'N/A'}`;
+      responseAbout.innerHTML = `<strong>About:</strong> ${data.about || 'N/A'}`;
+    }
+
+    // Delete a URL from the sidebar and database
+    async function deleteUrl(url) {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/handle_scrape', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        if (!response.ok) throw new Error('Failed to delete URL');
+        loadUrlHistory(); // Reload the sidebar
+      } catch (error) {
+        console.error('Error deleting URL:', error);
+      }
+    }
+
+    // Load URL history on page load
+    loadUrlHistory();
   </script>
+   <!-- Footer -->
+   <footer class="bg-blue-600 text-white text-center py-4 mt-6">
+    <p>&copy; 2024 IDE Host Private Limited. All rights reserved.</p>
+  </footer>
 </body>
 
 </html>

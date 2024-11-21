@@ -41,7 +41,7 @@ def google_login():
         db.session.add(user)
         db.session.commit()
 
-        return render_template("dashboard.html", user=session["google_user"])
+        return render_template("index.html", user=session["google_user"])
 
     return render_template("login.html")
 

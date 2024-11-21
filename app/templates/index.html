@@ -2,73 +2,71 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDE Host Private Limited</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="script.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 text-gray-900">
-
-    <!-- Navbar -->
-    <nav class="bg-gray-200 text-white shadow-md">
-        <div class="container mx-auto flex items-center justify-between p-4">
-            <!-- Logo -->
-            <div class="flex items-center space-x-2">
-                <a href="">
-                    <img src="https://internshala-uploads.internshala.com/logo/7mlf3g1yuhn-18596.png.webp" alt="Logo"
-                        class="h-10 w-35">
-                </a>
-                <!-- <span class="font-bold text-lg">IDE Host</span> -->
-            </div>
-            <!-- Company name and Profile -->
-            <div class="flex items-center space-x-4">
-                <span class="hidden sm:block text-sm">Private Limited</span>
-                <img src="https://via.placeholder.com/40" alt="Profile"
-                    class="h-10 w-10 rounded-full border-2 border-gray-600">
-            </div>
-        </div>
-    </nav>
-
-
-
-    <!-- Content Area -->
-    <div id="content-container" class="container mx-auto mt-10">
-        <!-- <iframe 
-    src="login.html" 
-    class="w-full h-96" 
-    frameborder="0">
-  </iframe> -->
-        <button onclick="loadPage('login.html')">login</button>
-        <p class="text-center text-gray-600">Welcome to IDE Host Private Limited!</p>
+<body class="bg-gray-100 min-h-screen">
+  <!-- Navbar -->
+  <nav class="bg-blue-600 text-white shadow-md">
+    <div class="container mx-auto flex items-center justify-between p-4">
+      <!-- Logo -->
+      <div class="flex items-center space-x-2">
+        <a href="/">
+          <img src="https://internshala-uploads.internshala.com/logo/7mlf3g1yuhn-18596.png.webp" alt="Logo"
+            class="h-10">
+        </a>
+        <span class="font-bold text-lg">Dashboard</span>
+      </div>
+      <!-- Profile Section -->
+      <div class="flex items-center space-x-4">
+        {% if user.get('picture') %}
+        <a href="/logout" class="hover:underline">Log Out</a>
+        <img src="{{ user.get('picture') }}" alt="Profile Picture" class="w-20 h-20 rounded-full border-2 border-white">
+        {% else %}
+        <p class="text-gray-200">No profile picture available</p>
+        {% endif %}
+      </div>
     </div>
+  </nav>
 
+  <!-- Main Content -->
+  <main class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- User Details Section -->
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Profile Information</h2>
+        <div class="flex items-center space-x-4">
+          {% if user.get('picture') %}
+          <img src="{{ user.get('picture') }}" alt="Profile Picture" class="w-40 h-40 rounded-full border">
+          {% else %}
+          <p class="text-gray-500">No profile picture available</p>
+          {% endif %}
+          <div>
+            <p class="text-gray-700"><strong>Name:</strong> {{ user.get('name', 'N/A') }}</p>
+            <p class="text-gray-700"><strong>Email:</strong> {{ user.get('email', 'N/A') }}</p>
+          </div>
+        </div>
+      </div>
 
-    <!-- Chatbot Button -->
-    <button
-        class="fixed bottom-4 right-4 bg-gray-800 text-white p-4 rounded-full shadow-lg hover:bg-gray-700 transition">
-        <span class="font-semibold">💬 Chatbot</span>
-    </button>
-    <script> loadPage();
+      <!-- Action Links -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+        <div class="bg-white shadow rounded-lg p-6 text-center">
+          <a href="promptpage" class="text-blue-600 hover:underline font-semibold">Enter Prompt</a>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6 text-center">
+          <a href="scraperpage" class="text-blue-600 hover:underline font-semibold">Scraper</a>
+        </div>
+      </div>
+    </div>
+  </main>
 
-        // loadPage('dashboard.html')
-        function loadPage(page = 'http://127.0.0.1:5000/dashboard.html') {
-            // Load another HTML page dynamically   
-            fetch(page)
-
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('content-container').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error loading the page:', error);
-                    document.getElementById('content-container').innerHTML = '<p class="text-red-500">Failed to load the content.</p>';
-                });
-
-        }
-
-    </script>
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white text-center py-4 mt-6">
+    <p>&copy; 2024 IDE Host Private Limited. All rights reserved.</p>
+  </footer>
 </body>
 
 </html>
