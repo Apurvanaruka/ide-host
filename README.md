@@ -70,24 +70,42 @@ flask db upgrade
 
 To start the Flask app with reloading:
 ```bash
-flask --app run run --reload
+flask run
 ```
 
 ### 5. Docker Setup
 For Docker, create a `Dockerfile` and a `docker-compose.yml` file for easy setup.
 
 #### Dockerfile:
-```dockerfile
-FROM python:3.12-slim
+```FROM python:3.12-slim
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libpq-dev gcc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+# Copy requirements file
+COPY requirements.txt .
 
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
 COPY . .
 
-CMD ["flask", "--app", "run", "run", "--reload"]
+# Expose the port Flask runs on
+EXPOSE 5000
+
+# Initialize the database during container startup
+CMD flask db init && \
+    flask db migrate -m "Initial migration." && \
+    flask db upgrade && \
+    flask run --host=0.0.0.0
+
 ```
 
 #### docker-compose.yml:
@@ -96,9 +114,11 @@ version: "3.8"
 services:
   app:
     build: .
+    container_name: ideh
     ports:
       - "5000:5000"
     environment:
+      - DATABASE_URL=postgresql://postgres:admin@localhost/user_db
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
@@ -120,6 +140,7 @@ services:
 
 volumes:
   postgres_data:
+
 ```
 
 Run Docker containers:
@@ -150,11 +171,11 @@ docker-compose up --build
 Create a `.env` file with the following keys:
 
 ```env
-GOOGLE_API_KEY=AIzaSyAwIEpg7iGKz-LoYdRBnoF1hycvT5Ks77U
-GOOGLE_CLIENT_ID=975512642838-61a9v7bmogtccbdu2b0jqkq8bbq3c0bd.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
-DATABASE_URL=postgresql://postgres:admin@localhost/user_db
-SECRET_KEY=your_secret_key
+GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET
+DATABASE_URL=postgresql://USERNAME:PASSWORD@HOST/DATABASET_NAME
+SECRET_KEY=YOUR_SECRET_KEY
 ```
 
 ## Features

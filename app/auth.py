@@ -15,7 +15,6 @@ def google_login():
     if resp.ok:
         user_info = resp.json()
         session["google_user"] = user_info
-        print(user_info)
         # Extract user details
         id=user_info.get('id')
         email = user_info.get("email")
